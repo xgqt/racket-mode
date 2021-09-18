@@ -7,26 +7,44 @@
 (provide txt/gui
          make-initial-repl-namespace)
 
-;; Load racket/gui/base eagerly, if available, instantiating it in our
-;; namespace and under our main custodian (as opposed to those for
-;; user programs). This is our strategy to avoid "racket/gui/base
-;; cannot be instantiated more than once per process". The only reason
-;; it won't be loaded here now is if we're on a minimal Racket
-;; installation where gui-lib is not installed.
-(with-handlers ([exn:fail? void])
+;; Avoid "racket/gui/base cannot be instantiated more than once per
+;; process" errors.
+;;
+;; Attempt to instantiate racket/gui/base in our namespace and under
+;; our main custodian (as opposed to those for each user program run).
+;;
+;; Handle/ignore any exceptions. Some possibilities:
+;;
+;; - exn:fail:filesystem:missing-module? because gui-lib is not
+;;   installed, as with e.g. minimal Racket. That's fine. Don't show
+;;   any error message.
+;;
+;; - exn:fail? because some other problem. Do show error message for
+;;   user. A possible situation is that gui-lib is installed on a
+;;   headless system, and therefore e.g. gui-lib errors "Gtk
+;;   initialization failed for display :0". Our process will be in a
+;;   state where gui-available? is #f but racket/gui/base has already
+;;   been instantiated. That's not a good state, but, continue anyway.
+;;   It should be OK provided user programs don't actually use
+;;   racket/gui/base.
+
+(with-handlers ([exn:fail:filesystem:missing-module? void]
+                [exn:fail? (λ (exn)
+                             (displayln (exn-message exn)
+                                        (current-error-port)))])
   (dynamic-require 'racket/gui/base #f))
 
-;; If that succeeded, then it is important for REPL namespaces
-;; initially to have racket/gui/base _attached_, regardless of whether
-;; a user program _requires_ it. See also issue #555.
 (define-namespace-anchor anchor)
+(define namespace-here (namespace-anchor->namespace anchor))
+
 (define (make-initial-repl-namespace)
-  (define ns (make-base-namespace))
-  (when (gui-available?)
-    (namespace-attach-module (namespace-anchor->empty-namespace anchor)
+  (define new-base-namespace (make-base-namespace))
+  (when (parameterize ([current-namespace namespace-here])
+          (module-declared? 'racket/gui/base))
+    (namespace-attach-module namespace-here
                              'racket/gui/base
-                             ns))
-  ns)
+                             new-base-namespace))
+  new-base-namespace)
 
 ;; #301: On Windows, show then hide an initial frame.
 (when (and (gui-available?)

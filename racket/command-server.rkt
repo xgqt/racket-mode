@@ -7,7 +7,7 @@
          "debug.rkt"
          "elisp.rkt"
          (only-in "instrument.rkt" get-uncovered get-profile)
-         "commands/lexindent.rkt"
+         "hash-lang-bridge.rkt"
          "logger.rkt"
          "repl.rkt"
          "repl-session.rkt"
@@ -141,7 +141,7 @@
     [`(requires/find ,str)             (libs-exporting-documented str)]
     [`(doc-index-names)                (doc-index-names)]
     [`(doc-index-lookup ,str)          (doc-index-lookup str)]
-    [`(lexindent . ,more)              (apply lexindent more)]
+    [`(hash-lang . ,more)              (apply hash-lang more)]
 
     ;; Commands that MIGHT need a REPL session for context (e.g. its
     ;; namespace), if their first "how" argument is 'namespace.

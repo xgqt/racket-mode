@@ -162,8 +162,8 @@ direct response to one command request."
      (run-at-time 0.001 nil #'racket--logger-on-notify str))
     (`(debug-break . ,response)
      (run-at-time 0.001 nil #'racket--debug-on-break response))
-    (`(token ,id ,v)
-     (run-at-time 0.001 nil #'racket--hash-lang-on-token id v))
+    (`(token ,id . ,vs)
+     (run-at-time 0.001 nil #'racket--hash-lang-on-token id vs))
     (`(,nonce . ,response)
      (let ((callback (gethash nonce racket--cmd-nonce->callback)))
        (when callback

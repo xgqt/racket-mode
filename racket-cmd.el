@@ -164,12 +164,13 @@ direct response to one command request."
      (run-at-time 0.001 nil #'racket--debug-on-break response))
     (`(hash-lang ,id . ,vs)
      (run-at-time 0.001 nil #'racket--hash-lang-on-notify id vs))
-    (`(,nonce . ,response)
+    (`(,(and (pred numberp) nonce) . ,response)
      (let ((callback (gethash nonce racket--cmd-nonce->callback)))
        (when callback
          (remhash nonce racket--cmd-nonce->callback)
          (run-at-time 0.001 nil callback response))))
-    (_ nil)))
+    (`(ready) nil)
+    (_ (error "racket--cmd-dispatch-response unknown response: %s" response))))
 
 (defun racket--cmd/async-raw (repl-session-id command-sexpr &optional callback)
   "Send COMMAND-SEXPR and return. Later call CALLBACK with the response sexp.

@@ -162,20 +162,13 @@
     [`(get-profile)                    (get-profile)]
     [`(get-uncovered)                  (get-uncovered file)]
     [`(eval ,v)                        (eval-command v)]
-    [`(repl-submit? ,str ,eos?)        (repl-submit? str eos?)]
     [`(debug-eval ,src ,l ,c ,p ,code) (debug-eval src l c p code)]
     [`(debug-resume ,v)                (debug-resume v)]
     [`(debug-disable)                  (debug-disable)]
     [`(break ,kind)                    (break-repl-thread (current-session-id) kind)]
     [`(repl-zero-column)               (repl-zero-column)]))
 
-;;; A few commands defined here
-
-(define/contract (repl-submit? text eos)
-  (-> string? elisp-bool/c (or/c 'default #t #f))
-  (if (current-session-submit-pred)
-      ((current-session-submit-pred) (open-input-string text) (as-racket-bool eos))
-      'default))
+;;; Some trivial commands defined here
 
 (define (syms)
   (sort (map symbol->string (namespace-mapped-symbols))
